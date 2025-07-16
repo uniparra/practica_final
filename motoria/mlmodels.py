@@ -9,12 +9,11 @@ import logging
 
 logger = logging.getLogger("motoria.mlmodels")
 
-
 class MlModel(IaModel):
     """
     Clase para la creación de modelos de Machine Learning.
-    Ejemplo de un data: dict,
-            data = {
+    Ejemplo de un input: dict,
+            input = {
                     "data_input": {
                             "dataset": pd.DataFrame,
                             "target_name": "income",
@@ -33,7 +32,6 @@ class MlModel(IaModel):
                                             ]),
                         "param_grid": {
                             {
-                                'model': [LogisticRegression(max_iter=1000)],
                                 'selector__score_func': [f_classif, mutual_info_classif],
                                 'selector__k': [5, 10, 'all'],
                                 'model__C': [0.01, 0.1, 1, 10],
@@ -48,18 +46,16 @@ class MlModel(IaModel):
                                 'model__min_samples_split': [2, 5, 10]
                             }
                         },
-                        "scoring": "accuracy",
-
-
+                        "scoring": "accuracy"
                     }
                 }
     """
-    def __init__(self, pipeline: Pipeline, data: dict, data):
+    def __init__(self, pipeline: Pipeline, input: dict):
         super.__init__()
         self.pipeline: Pipeline = pipeline
-        self.data_input: dict = data.get("data_input")
-        self.preproces: dict = data.get("data_preproces")
-        self.train_info: dict = data.get("train")
+        self.data_input: dict = input.get("data_input")
+        self.preproces: dict = input.get("data_preproces")
+        self.train_info: dict = input.get("train")
         self.df: pd.DataFrame = self.data_input.get("dataset")
         self.target_name: str = self.data_input.get("target_name")
         self.cols_label_encod: list = self.data_input.get("cols_label_encod")
@@ -71,12 +67,12 @@ class MlModel(IaModel):
         self.y: pd.DataFrame = self.df_preprocessed[self.target_name]
 
         self.X_train, self.y_train, self.X_test, self.y_test = (
-            train_test_split(self.X, self.y, test_size=data.get("data_preproces").get("test_size"), random_state=1, stratify=self.y)) if data.get("data_preproces").get("stratify") \
-            else train_test_split(self.X, self.y, test_size=data.get("data_preproces").get("test_size"), random_state=1)
+            train_test_split(self.X, self.y, test_size=input.get("data_preproces").get("test_size"), random_state=1, stratify=self.y)) if input.get("data_preproces").get("stratify") \
+            else train_test_split(self.X, self.y, test_size=input.get("data_preproces").get("test_size"), random_state=1)
 
-        self.optimized_model = self.train(self, self.train_info.get("param_grid"), self.train_info.get("scoring"))
+        self.optimized_model: GridSearchCV = self.train(self, self.train_info.get("param_grid"), self.train_info.get("scoring"))
 
-        self.evaluate(self, self.optimized_model)
+        self.metrics: dict = self.evaluate(self, self.optimized_model)
 
 
     @staticmethod
