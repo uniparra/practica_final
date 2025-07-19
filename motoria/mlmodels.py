@@ -1,4 +1,4 @@
-from iamodel import IaModel
+from .iamodel import IaModel
 import pandas as pd
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.pipeline import Pipeline
@@ -16,11 +16,12 @@ class MlModel(IaModel):
             input = {
                     "data_input": {
                             "dataset": pd.DataFrame,
-                            "target_name": "income",
-                            "cols_label_encod": ["marital_status", "occupation", "relationship"]
-                            "cols_one_hot_encod" : ["workclass", "education"]
+                            "target_name": "income"
                         },
                     "data_prepoces: {
+                          "cols_label_encod": ["marital_status", "occupation", "relationship"],
+                          "cols_one_hot_encod" : ["workclass", "education"],
+                          "cols_to_drop": []
                           "test_size": 0.2,
                           "stratify": True
                         }
@@ -50,55 +51,29 @@ class MlModel(IaModel):
                     }
                 }
     """
-    def __init__(self, pipeline: Pipeline, input: dict):
-        super.__init__()
-        self.pipeline: Pipeline = pipeline
+    def __init__(self, input: dict):
+        super()
         self.data_input: dict = input.get("data_input")
-        self.preproces: dict = input.get("data_preproces")
+        self.preprocess: dict = input.get("data_preproces")
         self.train_info: dict = input.get("train")
+        self.pipeline: Pipeline = self.train_info.get("pipeline")
         self.df: pd.DataFrame = self.data_input.get("dataset")
         self.target_name: str = self.data_input.get("target_name")
-        self.cols_label_encod: list = self.data_input.get("cols_label_encod")
-        self.cols_one_hot_encod: list = self.data_input.get("cols_one_hot_encod")
 
-        self.df_preprocessed: pd.DataFrame = self.cat_encoding(self.df, self.cols_label_encod, self.cols_one_hot_encod)
+        self.df_preprocessed: pd.DataFrame = super().preprocessing(self.df, self.preprocess)
+        print(self.df_preprocessed.columns)
 
         self.X: pd.DataFrame = self.df_preprocessed.drop(columns=self.target_name)
         self.y: pd.DataFrame = self.df_preprocessed[self.target_name]
 
-        self.X_train, self.y_train, self.X_test, self.y_test = (
-            train_test_split(self.X, self.y, test_size=input.get("data_preproces").get("test_size"), random_state=1, stratify=self.y)) if input.get("data_preproces").get("stratify") \
-            else train_test_split(self.X, self.y, test_size=input.get("data_preproces").get("test_size"), random_state=1)
+        self.X_train, self.X_test, self.y_train, self.y_test = (
+            train_test_split(self.X, self.y, test_size=self.preprocess.get("test_size"), random_state=1, stratify=self.y)) if self.preprocess.get("stratify") \
+            else train_test_split(self.X, self.y, test_size=self.preprocess.get("test_size"), random_state=1)
 
-        self.optimized_model: GridSearchCV = self.train(self, self.train_info.get("param_grid"), self.train_info.get("scoring"))
+        self.optimized_model: GridSearchCV = self.train(self.train_info.get("param_grid"), self.train_info.get("scoring"))
 
         self.metrics: dict = self.evaluate(self, self.optimized_model)
 
-
-    @staticmethod
-    def cat_encoding(df: pd.DataFrame, cols_label_encod: list, cols_one_hot_encod: list) -> pd.DataFrame:
-        """
-        Codifica las variables categóricas de un dataframe.
-        """
-        df_data_preprocessed = df.copy()
-        for col in cols_label_encod:
-            conv_dict = {i: idx for idx, i in enumerate(df_data_preprocessed[col].unique())}
-            df_data_preprocessed[col] = df_data_preprocessed[col].replace(conv_dict)
-
-        df_data_preprocessed = pd.get_dummies(df_data_preprocessed, columns=cols_one_hot_encod, dtype=int, drop_first=True)
-        logger.info(f"Se ha realizado el preprocesamiento correctamente")
-        df_data_preprocessed.columns = df_data_preprocessed.columns.str.lower().str.replace(" ", "_")
-        return df_data_preprocessed
-
-    @staticmethod
-    def train(self, param_grid: dict, scoring: str) -> GridSearchCV:
-        """
-        Entrena un modelo de sklearn con GridSearchCV
-        """
-        grid = GridSearchCV(self.pipeline, param_grid=param_grid, scoring=scoring, cv=5)
-        result = grid.fit(self.X_train, self.y_train)
-        logger.info(f"Se entrena {type(self.pipeline['model']).__name__} con lo hiperparámetros {grid.best_params_} y con un score promedio en CV de, {grid.best_score_}")
-        return result
 
     @staticmethod
     def evaluate(self, model: GridSearchCV) -> dict:
@@ -121,4 +96,13 @@ class MlModel(IaModel):
         }
         logger.info(f"Métricas calculadas correctamente")
         return results
+
+    def train(self, param_grid: dict, scoring: str) -> GridSearchCV:
+        """
+        Entrena un modelo de sklearn con GridSearchCV
+        """
+        grid = GridSearchCV(self.pipeline, param_grid=param_grid, scoring=scoring, cv=5)
+        result = grid.fit(self.X_train, self.y_train)
+        logger.info(f"Se entrena {type(self.pipeline['model']).__name__} con lo hiperparámetros {grid.best_params_} y con un score promedio en CV de, {grid.best_score_}")
+        return result
 
