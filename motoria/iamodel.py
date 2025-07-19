@@ -69,6 +69,8 @@ class IaModel():
     df_data_clean_null = IaModel.clean_null(df_data_nan_filled)
     df_data_cols_encoded = IaModel.cols_encoder(df_data_clean_null, cols_label_encod, cols_one_hot_encod)
     return df_data_cols_encoded
+  
+  
   @abstractmethod
   def train(self, param_grid: dict, scoring: str) -> GridSearchCV:
     """
@@ -107,3 +109,21 @@ class IaModel():
     plt.title(f"Top {top_n} características más importantes")
     plt.tight_layout()
     plt.show()
+    
+  import matplotlib.pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay
+import os
+
+def plot_confusion_v2(model, X_test, y_test, name_model, output_dir="results/plots"):
+    
+    filename= f"confusion_matrix_{name_model}.png"
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, ax=ax, cmap=plt.cm.Blues)
+    ax.set_title("Matriz de Confusión")
+
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = os.path.join(output_dir, filename)
+    fig.savefig(filepath)
+    plt.close(fig)
+    print(f"Matriz de confusión guardada en: {filepath}")
