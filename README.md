@@ -1,8 +1,12 @@
 # Comparativa de Modelos orientados a resolver un problema de Clasificación Binaria
 
--<ins>Autores</ins>: ***Unai Iparragirre*** y ***Gaizka Menéndez***
+<ins>Autores</ins>: ***Unai Iparragirre*** y ***Gaizka Menéndez***
 
-Los modelos que se entrenaron y evaluaron son los siguientes:
+## Contexto de la problemática
+
+En el sector hotelero, la cancelación de reservas es una preocupación constante que afecta significativamente la planificación y los ingresos. Muchos hoteles y apartamentos buscan activamente formas de detectar con precisión qué clientes podrían cancelar su reserva. Aquí es donde entra nuestro estudio: hemos desarrollado y evaluado modelos de Machine Learning y Deep Learning diseñados para predecir la probabilidad de cancelación por parte del cliente, permitiendo así a los gestores hoteleros tomar decisiones bien fundamentadas y que puedan realizar correcciones o adaptaciones en funcion de los objetivos de negocio.
+
+Los modelos que se diseñaron, entrenaron y evaluaron para este propósito son los siguientes:
 
 * Regresión logística
 * Árbol de decisión
@@ -49,9 +53,9 @@ Los datos con los que se trabajaran son los que desglosaremos a continuación:
 | `reservation_status`             | Estado final de la reserva: Check-Out, Canceled, No-Show |
 | `reservation_status_date`        | Fecha en que se actualizó el estado                      |
 
-La variable objetivo de este estudio es `is_canceled`, que es la que nos ayudará a determinar si un cliente cancelará o no una reserva. Analizando el resto del dataset vemos que nuestro conjunto de datos contiene columnas conteniendo valores faltantes o "Nan". Estas columnas son:
+La variable objetivo de este estudio es `is_canceled`, que es la que pretendemos predecir a partir de una serie de inputs para determinar si un cliente cancelará o no una reserva de hotel.
 
-Sacamos las siguientes intuiciones de los valores nulos que hemos sacado del info():
+Sacamos la siguiente información sobre los tipos de columnas presentes en el dataset (tipo de los datos que contienen int, float, object ...). Esto nos permitirá ver que columnas presentan valores nulos en sus filas además de aquellas que puedan requerir algun procesamiento particular dependiendo del formato en el que se encuentren. Durante la fase de análisis exploratorio de datos (EDA), se identificaron columnas con valores faltantes (NaN). Estas son:
 
 | Nombre Variable | Estudio Preliminar |
 |---|---|
@@ -60,7 +64,7 @@ Sacamos las siguientes intuiciones de los valores nulos que hemos sacado del inf
 | `agent` | Tiene valores nulos. Según la descripción puede tomar valores nulos. |
 | `company` | Tiene valores nulos, ocurre lo mismo que con agent. Habría que ver qué hacer en este caso puesto que son muchos los valores nulos. |
 
-Ahora buscaremos qué variables son aquellas que mayor impacto tienen en nuestra variable objetivo. Esto se puede ver de diferentes forma como puede ser la correlacion entre las features, esto nos puede dar una aproximación inicial a la solución o ayudarnos a comprender cuales son verdaderamente útiles. Para pioder calcular esta correlación debemos de disponer de un conjuntos de datos enteramente numérico por lo que tendremos que decidir que hacemos con las variables categóricas, strings, fechas y con aquellas columnas que hemos observado que tienen valores nulos. 
+Para identificar las variables con mayor impacto en la variable objetivo y preparar los datos para los modelos, se realizó un análisis de correlación y se implementaron estrategias de preprocesamiento para manejar valores nulos, variables categóricas, strings y fechas. 
 
 
  El analisis y pruebas de preprocesamiento de las variables, además del entrenamiento y evaluacion de algunos de los algoritmos que se muestran se llevó a cabo en este notebook:  
