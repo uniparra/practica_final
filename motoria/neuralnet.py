@@ -22,7 +22,7 @@ hotel_data = pd.read_csv('../data/dataset_practica_final.csv')
 class SimpleNeuralNetwork():
     
     
-    def __init__(self, X_train_set, y_train_set, X_test_set, y_test_set,  dropout = 0.3, reg = 0.0001, learning_rate = 0.001, dense_units = 32):
+    def __init__(self, X_train_set, y_train_set, X_test_set, y_test_set,  dropout = 0.3, reg = 0.0001, learning_rate = 0.001, dense_units = 32, patience = 10):
         # Inicializaciones correspondientes a los conjuntos de datos
         self.scaler = StandardScaler()
         self.X_train = X_train_set
@@ -36,14 +36,16 @@ class SimpleNeuralNetwork():
         self.layer_reg = reg
         self.optimizer_lr = learning_rate
         self.layer_dense_units = dense_units
+        self.patience = patience
+        
         
         # Lanzamos la creación, entrenamiento y evaluación del modelo
-        self.launch_snn()
+        self.fit_and_evaluate()
         
         
 
 
-    def simple_neural_network_arch(self):
+    def simple_neural_network_build(self):
         # Creamos el modelo con 3 
         model = Sequential()
         model.add(Dense(self.layer_dense_units, input_shape=(self.input_shape,), activation='relu', kernel_regularizer=l2(self.layer_reg)))
@@ -60,7 +62,7 @@ class SimpleNeuralNetwork():
 
     def train_simple_nn(self, model, X_train, y_train):
         
-        early_stopping = EarlyStopping(monitor='val_accuracy', mode='max', patience=10, restore_best_weights=True) # el mode a max es para buscar siempre la máxima accuracy
+        early_stopping = EarlyStopping(monitor='val_accuracy', mode='max', patience=self.patience, restore_best_weights=True) # el mode a max es para buscar siempre la máxima accuracy
         history = model.fit(X_train, y_train, callbacks=[early_stopping], epochs=200, batch_size=10, validation_split=0.2, shuffle=True, verbose=1)
         
         return model, history
@@ -71,13 +73,14 @@ class SimpleNeuralNetwork():
         return loss, accuracy
     
     
-    def launch_snn(self):
+    def fit_and_evaluate(self):
         
         X_train_scaled = self.scaler.fit_transform(self.X_train)
         X_test_scaled = self.scaler.transform(self.X_test)
-        simple_nn_model = self.simple_neural_network_arch()
+        simple_nn_model = self.simple_neural_network_build()
         trained_model, training_history = self.train_simple_nn(model=simple_nn_model, X_train=X_train_scaled, y_train=self.y_train)
         loss, acc = self.eval(trained_model=trained_model, X_test_scaled=X_test_scaled, y_test=self.y_test)
+        return trained_model, training_history, loss, acc
 
 
 
