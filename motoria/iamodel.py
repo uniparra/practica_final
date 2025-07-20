@@ -110,20 +110,5 @@ class IaModel():
     plt.tight_layout()
     plt.show()
     
-  import matplotlib.pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay
-import os
 
-def plot_confusion_v2(model, X_test, y_test, name_model, output_dir="results/plots"):
-    
-    filename= f"confusion_matrix_{name_model}.png"
 
-    fig, ax = plt.subplots(figsize=(8, 8))
-    ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, ax=ax, cmap=plt.cm.Blues)
-    ax.set_title("Matriz de Confusión")
-
-    os.makedirs(output_dir, exist_ok=True)
-    filepath = os.path.join(output_dir, filename)
-    fig.savefig(filepath)
-    plt.close(fig)
-    print(f"Matriz de confusión guardada en: {filepath}")

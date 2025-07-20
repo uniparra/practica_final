@@ -1,19 +1,16 @@
-
-
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
-from sklearn.pipeline import Pipeline
-from scikeras.wrappers import KerasClassifier # O KerasRegressor si es un problema de regresión
-from tensorflow.keras import models, layers
-from tensorflow.keras.optimizers import Adam
-
-from tensorflow.keras.models import Sequential # Import Sequential directly
-from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Dropout # Import specific layer types
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.regularizers import l2
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler
+from scikeras.wrappers import KerasClassifier
+import matplotlib.pyplot as plt
+import os
+from sklearn.datasets import make_classification
 
 
 hotel_data = pd.read_csv('../data/dataset_practica_final.csv')
@@ -21,31 +18,81 @@ hotel_data = pd.read_csv('../data/dataset_practica_final.csv')
 # Aqui definiríamos la llamada a la clase que preprocese los datos, o incluso que traiga directamente los conjuntos generados y tratados ahí hasta aquí para solo usarlos
 # X_train, X_test, y_train, y_test = train_test_split(X_kfeat, y_kfeat, test_size=0.2, random_state=42)
 
+
+class SimpleNeuralNetwork():
+    
+    
+    def __init__(self, X_train_set, y_train_set, X_test_set, y_test_set,  dropout = 0.3, reg = 0.0001, learning_rate = 0.001, dense_units = 32):
+        # Inicializaciones correspondientes a los conjuntos de datos
+        self.scaler = StandardScaler()
+        self.X_train = X_train_set
+        self.X_test = X_test_set
+        self.y_train = y_train_set
+        self.y_test = y_test_set
+        self.input_shape = X_train_set.shape[1]
+        
+        # Parametros de inicialización de la estructura
+        self.layer_dropout = dropout
+        self.layer_reg = reg
+        self.optimizer_lr = learning_rate
+        self.layer_dense_units = dense_units
+        
+        # Lanzamos la creación, entrenamiento y evaluación del modelo
+        self.launch_snn()
+        
+        
+
+
+    def simple_neural_network_arch(self):
+        # Creamos el modelo con 3 
+        model = Sequential()
+        model.add(Dense(self.layer_dense_units, input_shape=(self.input_shape,), activation='relu', kernel_regularizer=l2(self.layer_reg)))
+        model.add(Dropout(self.layer_dropout))
+        model.add(Dense(self.layer_dense_units, activation='relu', kernel_regularizer=l2(self.layer_reg)))
+        model.add(Dropout(self.layer_dropout))
+        model.add(Dense(1, activation='sigmoid'))
+
+        optimizer = Adam(learning_rate=self.optimizer_lr)
+        model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+
+        return model
+
+
+    def train_simple_nn(self, model, X_train, y_train):
+        
+        early_stopping = EarlyStopping(monitor='val_accuracy', mode='max', patience=10, restore_best_weights=True) # el mode a max es para buscar siempre la máxima accuracy
+        history = model.fit(X_train, y_train, callbacks=[early_stopping], epochs=200, batch_size=10, validation_split=0.2, shuffle=True, verbose=1)
+        
+        return model, history
+    
+    def eval(self, trained_model, X_test_scaled, y_test):
+        loss, accuracy = trained_model.evaluate(X_test_scaled, y_test, verbose=0)
+        
+        return loss, accuracy
+    
+    
+    def launch_snn(self):
+        
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+        X_test_scaled = self.scaler.transform(self.X_test)
+        simple_nn_model = self.simple_neural_network_arch()
+        trained_model, training_history = self.train_simple_nn(model=simple_nn_model, X_train=X_train_scaled, y_train=self.y_train)
+        loss, acc = self.eval(trained_model=trained_model, X_test_scaled=X_test_scaled, y_test=self.y_test)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 shape = X_train.shape[1]
-
-def simple_neural_network(shape):
-    # Creamos el modelo
-    model = Sequential()
-    model.add(Dense(16, input_shape=(shape,), activation='relu')) 
-    model.add(Dense(16, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
-    
-    # Compilamos el modelo
-    model.compile(optimizer='Adam', loss='binary_crossentropy', metrics=['accuracy'])
-
-    return model
-
-
-def train_simple_nn(model, X_train, y_train):
-    
-    early_stopping = EarlyStopping(monitor='val_accuracy', mode='max', patience=10, restore_best_weights=True) # el mode a max es para buscar siempre la máxima accuracy
-    history = model.fit(X_train, y_train, callbacks=[early_stopping], epochs=200, batch_size=10, validation_split=0.2, shuffle=True, verbose=1)
-    
-    return model, history
-
-
-
-
 
 def create_cnn_model(input_shape, num_classes, filters=32, kernel_size=3, dense_units=64, dropout_rate=0.3, learning_rate=0.001):
     model = Sequential()
@@ -68,6 +115,11 @@ def create_cnn_model(input_shape, num_classes, filters=32, kernel_size=3, dense_
     optimizer = Adam(learning_rate=learning_rate)
     model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics_list)
     return model
+
+
+
+
+
 
 
 input_shape_cnn = (X_train.shape[1], 1)
