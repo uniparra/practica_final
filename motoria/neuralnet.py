@@ -13,7 +13,7 @@ import os
 from sklearn.datasets import make_classification
 
 
-hotel_data = pd.read_csv('../data/dataset_practica_final.csv')
+# hotel_data = pd.read_csv('../data/dataset_practica_final.csv')
 
 # Aqui definiríamos la llamada a la clase que preprocese los datos, o incluso que traiga directamente los conjuntos generados y tratados ahí hasta aquí para solo usarlos
 # X_train, X_test, y_train, y_test = train_test_split(X_kfeat, y_kfeat, test_size=0.2, random_state=42)
@@ -95,29 +95,29 @@ class SimpleNeuralNetwork():
 
 
 
-shape = X_train.shape[1]
+# shape = X_train.shape[1]
 
-def create_cnn_model(input_shape, num_classes, filters=32, kernel_size=3, dense_units=64, dropout_rate=0.3, learning_rate=0.001):
-    model = Sequential()
-    # Convolutional layer 1 + MaxPooling
-    model.add(Conv1D(filters=filters, kernel_size=kernel_size, activation='relu', input_shape=input_shape))
-    model.add(MaxPooling1D(pool_size=2))
+# def create_cnn_model(input_shape, num_classes, filters=32, kernel_size=3, dense_units=64, dropout_rate=0.3, learning_rate=0.001):
+#     model = Sequential()
+#     # Convolutional layer 1 + MaxPooling
+#     model.add(Conv1D(filters=filters, kernel_size=kernel_size, activation='relu', input_shape=input_shape))
+#     model.add(MaxPooling1D(pool_size=2))
 
-    # Vector latente
-    model.add(Flatten())
+#     # Vector latente
+#     model.add(Flatten())
 
-    # Capa expamsión y regularización
-    model.add(Dense(units=dense_units, activation='relu'))
-    model.add(Dropout(dropout_rate))
+#     # Capa expamsión y regularización
+#     model.add(Dense(units=dense_units, activation='relu'))
+#     model.add(Dropout(dropout_rate))
 
-    # Capa de salida
-    model.add(Dense(1, activation='sigmoid'))
-    loss_func = 'binary_crossentropy'
-    metrics_list = ['accuracy']
+#     # Capa de salida
+#     model.add(Dense(1, activation='sigmoid'))
+#     loss_func = 'binary_crossentropy'
+#     metrics_list = ['accuracy']
 
-    optimizer = Adam(learning_rate=learning_rate)
-    model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics_list)
-    return model
+#     optimizer = Adam(learning_rate=learning_rate)
+#     model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics_list)
+#     return model
 
 
 
