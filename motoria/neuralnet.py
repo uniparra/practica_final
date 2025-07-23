@@ -1,5 +1,6 @@
-import pandas as pd
-import numpy as np
+from iamodel import IaModel
+import neural_feature_selection as nfs
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
@@ -19,28 +20,96 @@ from sklearn.datasets import make_classification
 # X_train, X_test, y_train, y_test = train_test_split(X_kfeat, y_kfeat, test_size=0.2, random_state=42)
 
 
-class SimpleNeuralNetwork():
+class SimpleNeuralNetwork(IaModel, ):
+    
+    """
+    Clase para la creación de modelos de Machine Learning.
+    Ejemplo de un input: dict,
+            input = {
+                    "data_input": {
+                            "dataset": pd.DataFrame,
+                            "target_name": "income"
+                        },
+                    "data_prepoces: {
+                          "cols_label_encod": ["marital_status", "occupation", "relationship"],
+                          "cols_one_hot_encod" : ["workclass", "education"],
+                          "cols_to_drop": []
+                          "test_size": 0.2,
+                          "stratify": True
+                        }
+                    "train": {
+                        "dropout": 0.3, 
+                        "reg": 0.0001, 
+                        "learning_rate": 0.001, 
+                        "dense_units": 32, 
+                        "patience": 10,
+                        "scaler": StandardScaler,
+                        "mode": "grid_search", # Puede ser "grid_search", "random_search" o "self_train"
+                        "pipeline": pipeline = Pipeline([
+                                            ('scaler', StandardScaler()),
+                                            ('selector', SelectKBest()),
+                                            ('model', LogisticRegression())
+                                            ]),
+                        "param_grid": {
+                            {
+                                'selector__score_func': [f_classif, mutual_info_classif],
+                                'selector__k': [5, 10, 'all'],
+                                'model__C': [0.01, 0.1, 1, 10],
+                                'model__penalty': ['l2'],
+                                'model__solver': ['liblinear']
+                            },
+                            {
+                                'model': [DecisionTreeClassifier()],
+                                'selector__score_func': [f_classif, mutual_info_classif], #Analizar la posibilidad de usar otro selector de espacio de, p. ej. SelectFromModel
+                                'selector__k': [5, 10, 'all'],
+                                'model__max_depth': [None, 5, 10],
+                                'model__min_samples_split': [2, 5, 10]
+                            }
+                        },
+                        "scoring": "accuracy",
+                        "cv": 3
+                    }
+                }
+    """
     
     
-    def __init__(self, X_train_set, y_train_set, X_test_set, y_test_set,  dropout = 0.3, reg = 0.0001, learning_rate = 0.001, dense_units = 32, patience = 10):
+    def __init__(self, entry):
         # Inicializaciones correspondientes a los conjuntos de datos
-        self.scaler = StandardScaler()
-        self.X_train = X_train_set
-        self.X_test = X_test_set
-        self.y_train = y_train_set
-        self.y_test = y_test_set
-        self.input_shape = X_train_set.shape[1]
+        self.scaler = entry['train']['scaler']
+        self.train_info = entry['train']
+        # self.X_preprocessed = self.X_train
+        # self.y_train_preprocessed = self.y_train
+        self.X_train_tunned, self.y_train_tunned, self.X_test_tunned = nfs.feature_selection_And_balancing(self.X_train, self.X_test, self.y_train)
+        self.input_shape = self.X_train_tunned.shape[1]
         
         # Parametros de inicialización de la estructura
-        self.layer_dropout = dropout
-        self.layer_reg = reg
-        self.optimizer_lr = learning_rate
-        self.layer_dense_units = dense_units
-        self.patience = patience
+        self.layer_dropout = self.train_info['dropout']
+        self.layer_reg = self.train_info['reg']
+        self.optimizer_lr = self.train_info['learning_rate']
+        self.layer_dense_units = self.train_info['dense_units']
+        self.patience = self.train_info['patience']
+        
+        self.X_train_scaled = self.scaler.fit_transform(self.X_train_tunned)
+        self.X_test_scaled = self.scaler.transform(self.X_test_tunned)
         
         
         # Lanzamos la creación, entrenamiento y evaluación del modelo
-        self.fit_and_evaluate()
+        self.trained_model, _ = self.train()
+        self.metrics = self.evaluate_model()
+        
+        # super().__init__(entry)
+        # self.train_info: dict = entry.get("train")
+        # self.pipeline: Pipeline = self.train_info.get("pipeline")
+        # self.trained_model = self.train(self.train_info.get("mode"))
+        # self.model = self.trained_model.best_estimator_['model'] if self.train_info in ["rs_train", "gs_train"] else self.trained_model['model']
+        # if self.train_info in ["rs_train", "gs_train"]:
+        #     self.selector = self.trained_model.best_estimator_.named_steps['selector'] if 'selector' in self.trained_model.best_estimator_.named_steps else None
+        # else:
+        #     self.selector = self.trained_model.named_steps[
+        #         'selector'] if 'selector' in self.trained_model.named_steps else None
+
+        # self.model_name = type(self.model).__name__
+        # self.metrics: dict = self.evaluate(self.trained_model)
         
         
 
@@ -49,6 +118,8 @@ class SimpleNeuralNetwork():
         # Creamos el modelo con 3 
         model = Sequential()
         model.add(Dense(self.layer_dense_units, input_shape=(self.input_shape,), activation='relu', kernel_regularizer=l2(self.layer_reg)))
+        model.add(Dropout(self.layer_dropout))
+        model.add(Dense(self.layer_dense_units, activation='relu', kernel_regularizer=l2(self.layer_reg)))
         model.add(Dropout(self.layer_dropout))
         model.add(Dense(self.layer_dense_units, activation='relu', kernel_regularizer=l2(self.layer_reg)))
         model.add(Dropout(self.layer_dropout))
@@ -67,108 +138,46 @@ class SimpleNeuralNetwork():
         
         return model, history
     
-    def eval(self, trained_model, X_test_scaled, y_test):
-        loss, accuracy = trained_model.evaluate(X_test_scaled, y_test, verbose=0)
+    def eval(self, trained_model):
+        loss, accuracy = trained_model.evaluate(self.X_test_scaled, self.y_test, verbose=0)
+        y_pred = trained_model.predict(self.y_test)
+        y_proba = trained_model.predict_proba(self.X_test_scaled)[:, 1]
+        roc_auc = roc_auc_score(self.y_test, y_proba)
         
-        return loss, accuracy
+        results = {
+            "loss": loss,
+            "accuracy": accuracy,
+            "precision": precision_score(self.y_test, y_pred),
+            "recall": recall_score(self.y_test, y_pred),
+            "f1": f1_score(self.y_test, y_pred),
+            "roc_auc": roc_auc
+        }
+        return results
     
     
-    def fit_and_evaluate(self):
+    def train(self):
         
-        X_train_scaled = self.scaler.fit_transform(self.X_train)
-        X_test_scaled = self.scaler.transform(self.X_test)
         simple_nn_model = self.simple_neural_network_build()
-        trained_model, training_history = self.train_simple_nn(model=simple_nn_model, X_train=X_train_scaled, y_train=self.y_train)
-        loss, acc = self.eval(trained_model=trained_model, X_test_scaled=X_test_scaled, y_test=self.y_test)
-        return trained_model, training_history, loss, acc
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# shape = X_train.shape[1]
-
-# def create_cnn_model(input_shape, num_classes, filters=32, kernel_size=3, dense_units=64, dropout_rate=0.3, learning_rate=0.001):
-#     model = Sequential()
-#     # Convolutional layer 1 + MaxPooling
-#     model.add(Conv1D(filters=filters, kernel_size=kernel_size, activation='relu', input_shape=input_shape))
-#     model.add(MaxPooling1D(pool_size=2))
-
-#     # Vector latente
-#     model.add(Flatten())
-
-#     # Capa expamsión y regularización
-#     model.add(Dense(units=dense_units, activation='relu'))
-#     model.add(Dropout(dropout_rate))
-
-#     # Capa de salida
-#     model.add(Dense(1, activation='sigmoid'))
-#     loss_func = 'binary_crossentropy'
-#     metrics_list = ['accuracy']
-
-#     optimizer = Adam(learning_rate=learning_rate)
-#     model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics_list)
-#     return model
-
-
-
-
-
-
-
-input_shape_cnn = (X_train.shape[1], 1)
-num_classes = 2 
-
-# Prueba la creación del modelo
-my_cnn_model = create_cnn_model(input_shape=input_shape_cnn, num_classes=num_classes)
-# my_cnn_model.summary()
-
-cnn_model_wrapper = KerasClassifier(model=create_cnn_model, verbose=0, model__input_shape=input_shape_cnn, model__num_classes=num_classes)
-
-
-pipeline_cnn = Pipeline([
-    ('selector', SelectKBest()), 
-    ('scaler', StandardScaler()),
-    ('cnn', cnn_model_wrapper)
-])
-
-
-param_grid_cnn = {
+        trained_model, training_history = self.train_simple_nn(model=simple_nn_model, X_train=self.X_train_scaled, y_train=self.y_train_tunned)
+        
+        return trained_model, training_history
     
-    'selector__score_func': [f_classif, mutual_info_classif],
-    'selector__k': [5, 'all'], 
-
     
-    'cnn__model__filters': [16, 32], 
-    'cnn__model__kernel_size': [2, 3], 
-    'cnn__model__pool_size': [2], 
-    'cnn__model__dense_units': [32, 64],
-    'cnn__model__dropout_rate': [0.0, 0.2], 
-    'cnn__model__learning_rate': [0.001, 0.0005], 
-
-    
-    'cnn__epochs': [10, 20], 
-    'cnn__batch_size': [16, 32] 
-}
+    def evaluate_model(self):
+        results = self.eval(trained_model=self.trained_model, X_test_scaled=self.X_test_scaled, y_test=self.y_test)
+        return results
 
 
-grid_search_cnn = GridSearchCV(estimator=pipeline_cnn, param_grid=param_grid_cnn, scoring='accuracy', cv=3, n_jobs=-1, verbose=2)
-
-grid_search_cnn.fit(X_train, y_train)
-
-# Imprime los mejores resultados
-print(f"\nMejor puntuación: {grid_search_cnn.best_score_:.4f}")
-print(f"Mejores parámetros: {grid_search_cnn.best_params_}")
 
 
-best_cnn_pipeline = grid_search_cnn.best_estimator_
-y_pred = best_cnn_pipeline.predict(X_test)
+
+
+
+
+
+
+
+
+
+
+
