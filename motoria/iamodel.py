@@ -69,6 +69,8 @@ class IaModel():
     df_data_clean_null = IaModel.clean_null(df_data_nan_filled)
     df_data_cols_encoded = IaModel.cols_encoder(df_data_clean_null, cols_label_encod, cols_one_hot_encod)
     return df_data_cols_encoded
+  
+  
   @abstractmethod
   def train(self, param_grid: dict, scoring: str) -> GridSearchCV:
     """
@@ -107,3 +109,6 @@ class IaModel():
     plt.title(f"Top {top_n} características más importantes")
     plt.tight_layout()
     plt.show()
+    
+
+

@@ -1,5 +1,3 @@
-# src/data_processor.py
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import numpy as np 
@@ -18,7 +16,8 @@ def load_and_preprocess_hotel_data(df_data, target_column, test_size=0.2, random
     }
     df_data_preprocessed['arrival_date_month'] = df_data_preprocessed['arrival_date_month'].replace(month_correspondance)
     
-    # Variables habitacion_reservada y habitacion_asignada
+    # Variables habitacion_reservada y habitacion_asignada, al tener ambas los mismos tipos de habitaciones y habitación asignada incluir dos posibilidades mas pues 
+    # usamos esta para generar el diccionario
     
     reserved_rooms = sorted(df_data_preprocessed['assigned_room_type'].unique().tolist())
     rooms = {}
