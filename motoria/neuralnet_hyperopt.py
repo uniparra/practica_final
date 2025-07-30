@@ -160,6 +160,15 @@ class NeuralNet_Hyperopt():
     
 if __name__ == '__main__':
     nn_optimizer = NeuralNet_Hyperopt(X_df, y_series)
+    
+    space = {
+        'num_hidden_layers': hp.choice('num_hidden_layers', [1, 2, 3]), # Número de capas ocultas
+        'units': hp.choice('units', [64, 128, 256]), # Unidades por capa
+        'learning_rate': hp.loguniform('learning_rate', np.log(0.0001), np.log(0.01)), # Tasa de aprendizaje (logarítmica)
+        'dropout_rate': hp.uniform('dropout_rate', 0.1, 0.5), # Tasa de Dropout
+        'batch_size': hp.choice('batch_size', [32, 64, 128]), # Tamaño del batch
+        'epochs': hp.choice('epochs', [50, 100, 150]) # Número máximo de épocas (EarlyStopping lo limitará)
+    }
 
     # Ejecutar la búsqueda de hiperparámetros.
     # max_evals: número de combinaciones de hiperparámetros que Hyperopt probará.
