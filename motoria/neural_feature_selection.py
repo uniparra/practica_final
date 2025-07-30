@@ -21,8 +21,8 @@ def feature_selection_And_balancing(X_train, X_test, y_train):
     X_train_mic = X_train[features_mic]
     X_test_mic = X_test[features_mic]
     
-    # Ahora estas variables las volvemos a pasar por otro filtro. El filtro embebido de Random Forest Classifier nos permite
-    # las features importances, es un método que se emplea para capturar interacciones complejas. 
+    # Ahora estas variables las volvemos a pasar por otro filtro. El filtro embebido de Random Forest Classifier nos permite obtener
+    # las features_importances, es un método que se emplea para capturar relaciones complejas. 
     
     rf_model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
     rf_model.fit(X_train_mic, y_train)
