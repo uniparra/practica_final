@@ -8,7 +8,6 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.regularizers import l2
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
-from scikeras.wrappers import KerasClassifier
 import matplotlib.pyplot as plt
 import os
 from sklearn.datasets import make_classification
@@ -20,7 +19,7 @@ from sklearn.datasets import make_classification
 # X_train, X_test, y_train, y_test = train_test_split(X_kfeat, y_kfeat, test_size=0.2, random_state=42)
 
 
-class SimpleNeuralNetwork(IaModel, ):
+class SimpleNeuralNetwork(IaModel):
     
     """
     Clase para la creación de modelos de Machine Learning.
@@ -139,7 +138,7 @@ class SimpleNeuralNetwork(IaModel, ):
         return model, history
     
     def eval(self, trained_model):
-        loss, accuracy = trained_model.evaluate(self.X_test_scaled, self.y_test, verbose=0)
+        loss, accuracy = trained_model.evaluate_model(self.X_test_scaled, self.y_test, verbose=0)
         y_pred = trained_model.predict(self.y_test)
         y_proba = trained_model.predict_proba(self.X_test_scaled)[:, 1]
         roc_auc = roc_auc_score(self.y_test, y_proba)
@@ -155,7 +154,7 @@ class SimpleNeuralNetwork(IaModel, ):
         return results
     
     
-    def train(self):
+    def train(self, mode: str="self_train"):
         
         simple_nn_model = self.simple_neural_network_build()
         trained_model, training_history = self.train_simple_nn(model=simple_nn_model, X_train=self.X_train_scaled, y_train=self.y_train_tunned)

@@ -67,5 +67,7 @@ Sacamos la siguiente información sobre los tipos de columnas presentes en el da
 Para identificar las variables con mayor impacto en la variable objetivo y preparar los datos para los modelos, se realizó un análisis de correlación y se implementaron estrategias de preprocesamiento para manejar valores nulos, variables categóricas, strings y fechas. 
 
 
- El analisis y pruebas de preprocesamiento de las variables, además del entrenamiento y evaluacion de algunos de los algoritmos que se muestran se llevó a cabo en este notebook:  
- [Explore our hands-on data exploration notebook.](docs/Pruebas_Módulo_Final_ML_y_DL_GV.ipynb)
+ El analisis y pruebas de preprocesamiento de las variables, además del entrenamiento y evaluacion de algunos de los algoritmos que se muestran se llevó a cabo en estos dos notebook:  
+ [Explore Gaizka's hands-on data exploration notebook.](docs/Pruebas_Módulo_Final_ML_y_DL_GV.ipynb)
+
+ [Explore Unai's hands-on data exploration notebook.](https://colab.research.google.com/drive/1pkE3AoVObuamCMI93yGLzf1mg1HBnpzC?authuser=1#scrollTo=rrb1NaCb1YEs)
