@@ -93,8 +93,12 @@ class NeuralNet_Hyperopt():
             dropout_rate = params['dropout_rate']
         )
 
+        
+        # Funciones que ayudan durante la busqueda de los mejores parametros) 
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=0.00001)
+        # Reduce el learning rate a medida que el modelo entrena favoreciendo que la funcion de perdida alcance un mínimo
         early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+        # cuando el rendimiento del modelo no mejore mas detenemos su entrenamiento antes
 
         history = model.fit(
             self.X_train_hp, self.y_train_hp,
