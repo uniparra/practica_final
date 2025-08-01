@@ -70,4 +70,33 @@ Para identificar las variables con mayor impacto en la variable objetivo y prepa
  El analisis y pruebas de preprocesamiento de las variables, además del entrenamiento y evaluacion de algunos de los algoritmos que se muestran se llevó a cabo en estos dos notebook:  
  [Explore Gaizka's hands-on data exploration notebook.](docs/Pruebas_Módulo_Final_ML_y_DL_GV.ipynb)
 
- [Explore Unai's hands-on data exploration notebook.](https://colab.research.google.com/drive/1pkE3AoVObuamCMI93yGLzf1mg1HBnpzC?authuser=1#scrollTo=rrb1NaCb1YEs)
+ [Explore Unai's hands-on data exploration notebook.](https://colab.research.google.com/drive/1pkE3AoVObuamCMI93yGLzf1mg1HBnpzC?authuser=1#scrollTo=BDPKObigZi_M)
+ 
+
+
+[Eleccion final y comparación de resultados](./Elección%20final.png)
+## Conclusiones
+
+ Tras probar con diferentes modelos y distintas configuraciones, hemos llegado a las siguientes conclusiones:
+* Importancia de la selección y transformación de las features.
+  * Cuando incluimos arrival_ralation = [before, after, equal], como indicador de si había habido un reservtion_status modificado previo al día de llegada o no, creamos sin quererlo una variable trivial, ya que casi exactamente el mismo comportamiento que is canceled.
+  * Al hacer validación cruzada, hemos visto que los modelos ganadores tienden a quedarse con todas las features. Y si forzamos a que se queden con menos, la precisión baja mucho.
+  * El one-hot encoding de las variables categóricas es una técnica que mejora la precisión de los modelos, pero también aumenta la complejidad y el tiempo de entrenamiento.
+  * Las features con muchos nulos, como `agent` y `company`, pueden ser problemáticas. En nuestro caso, al ser muchas las filas con valores nulos, decidimos eliminarlas. Sin embargo, en otros casos, podríamos optar por imputar estos valores o crear una categoría especial para ellos.
+* Importancia de la validación cruzada para encontrar el mejor modelo.
+  * Hemos probado diferentes técnicas de validación cruzada, StratifiedKFold, para intentar que nuestros modelos generalizan bien.
+  * La validación cruzada con GridSearchCV y variantes nos han servido para encontrar la mejor configuración para cada modelo, así hemos podido partir de espacios de búsqueda muy amplios con randomSearch y luego ir acotando hasta quedarnos con uno muy bien ajustado.
+  * La métrica de accuracy es importante, pero no es la única. En nuestro caso, también consideramos el recall y la F1-score para evaluar el rendimiento de los modelos ya que consideramos que para el negocio hotelero es más importante predecir bien una cancelación.
+  * No cuesta obtener un buen resultado con redes neuronales, pero resulta muy difícil optimizarlo consistenemente. Para este caso, consideramos que los modelos de machine learning tradicionales son más efectivos, siendo además más fáciles de interpretar y ajustar.
+
+## Mejoras
+
+* **Integración de Modelos**: Explorar la posibilidad de combinar modelos (ensemble learning) para mejorar la precisión y robustez de las predicciones.
+* **Implementación de un Pipeline de Producción**: Desarrollar un pipeline de producción que permita la actualización continua de los modelos con nuevos datos y la implementación de un sistema de monitorización para detectar posibles degradaciones en el rendimiento del modelo.
+* **Integración con Mlflow**: Implementar un sistema de seguimiento y gestión de experimentos utilizando MLflow para facilitar la reproducibilidad y el seguimiento de los modelos entrenados.
+* **Implementación API REST**: Desarrollar una API REST que permita a los usuarios interactuar con los modelos de manera sencilla, facilitando la integración con aplicaciones externas y la implementación de un sistema de recomendación en tiempo real.
+* **Parser de JSON**: Implementar un parser que permita la carga de configuraciones de modelos desde archivos JSON, facilitando la integración con interfaces gráficas y la personalización de los modelos por parte de los usuarios.
+* **Estudio de overfitting**: Realizar un estudio más profundo sobre el overfitting en los modelos de machine learning y deep learning.
+
+
+   
