@@ -163,7 +163,7 @@ class NeuralNet_Hyperopt():
     
     
 if __name__ == '__main__':
-    nn_optimizer = NeuralNet_Hyperopt(X_df, y_series)
+    nn_optimizer = NeuralNet_Hyperopt(X_df, y_series) # datos ficticios
     
     space = {
         'num_hidden_layers': hp.choice('num_hidden_layers', [1, 2, 3]), # Número de capas ocultas
@@ -176,14 +176,13 @@ if __name__ == '__main__':
 
     # Ejecutar la búsqueda de hiperparámetros.
     # max_evals: número de combinaciones de hiperparámetros que Hyperopt probará.
-    # Un valor más alto dará mejores resultados pero tomará más tiempo.
-    max_evaluations = 30 # Por ejemplo, 30 pruebas para empezar. Puedes aumentar a 50, 100, etc.
+    max_evaluations = 30 
     print(f"\nRealizando búsqueda de Hyperopt con {max_evaluations} evaluaciones...")
     best_params_found = nn_optimizer.hyperOptSearch(space, max_evals=max_evaluations)
 
     # Entrenar el modelo final con los mejores parámetros encontrados
-    # Esto usa el conjunto completo de entrenamiento (X_train_full_scaled, y_train_full)
+    # Esto usa el conjunto completo de entrenamiento 
     nn_optimizer.train_final_model()
 
-    # Evaluar el modelo final en el conjunto de prueba (datos no vistos)
+    # Evaluar el modelo final en el conjunto de prueba
     loss, accuracy = nn_optimizer.evaluate_final_model()
